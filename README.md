@@ -15,6 +15,13 @@ make generate will just put the file in the fake esp partition and not run a QEM
 
 
 
-thanks to bzt for developing POSIX-UEFI, which is used in the Bootloader
+thanks to bzt for developing POSIX-UEFI, which is used in the bootloader
+
+## Project Structure
+
+The bootloader can be found at boot folder
+The kernel can be found at fosk folder
+
+
 
 
