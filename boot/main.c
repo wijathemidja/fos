@@ -17,7 +17,7 @@ int main() {
     printf("Found GOP\n");
     efi_gop_mode_info_t *info;
     uint64_t SizeOfInfo;
-    int maxMode = gop->Mode->MaxMode;
+    uint32_t maxMode = gop->Mode->MaxMode;
     for (int i =0; i < maxMode; i ++) {
         status = gop->QueryMode(gop, i, &SizeOfInfo, &info);
         if (EFI_ERROR(status)) {
