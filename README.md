@@ -22,6 +22,10 @@ thanks to bzt for developing POSIX-UEFI, which is used in the bootloader
 The bootloader can be found at boot folder
 The kernel can be found at fosk folder
 
+## Implemented 
+
+Printing in bootloader 
+Setting up GOP (with highest resolution available!)
 
 
 
