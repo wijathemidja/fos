@@ -2,6 +2,19 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+struct color_t {
+    unsigned char r,g,b;
+};
+
+void print_pixel(volatile uint32_t* framebuffer, const uint64_t framebuffer_size, const uint64_t pitch, const uint16_t x, const uint16_t y, const struct color_t color) {
+    uint64_t where = x + y*pitch;
+    if (where*4 >= framebuffer_size) {
+        where = framebuffer_size - 1; // stop memory overflow out of framebuffer
+    }
+    uint32_t pixel_col = color.r << 16 | color.g << 8 | color.b;
+    framebuffer[where] = pixel_col;
+}
+
 int main() {
     printf("fos.\n");
     printf("Launched fos bootloader.\n");
@@ -36,17 +49,20 @@ int main() {
     }
     int selectMode = area;
     printf("Selected target mode found\n");
-    gop->SetMode(gop, selectMode);
+    status = gop->SetMode(gop, selectMode);
     if (EFI_ERROR(status)) {
         printf("Can't set mode\n");
         return 1;
     }
-    volatile uint64_t* framebuffer = (volatile uint64_t*)(gop->Mode->FrameBufferBase);
+    volatile uint32_t* framebuffer = (volatile uint32_t*)(gop->Mode->FrameBufferBase);
     const uint64_t framebuffer_size = gop->Mode->FrameBufferSize;
-    const efi_gop_pixel_format_t pixel_format = gop->Mode->Information->PixelFormat;
     const uint32_t pitch = gop->Mode->Information->PixelsPerScanLine;
+    const struct color_t white = {255,255,255};
     while (true) {};
     return 0;
 }
+
+
+
 
 
