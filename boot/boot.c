@@ -57,7 +57,6 @@ int main() {
     volatile uint32_t* framebuffer = (volatile uint32_t*)(gop->Mode->FrameBufferBase);
     const uint64_t framebuffer_size = gop->Mode->FrameBufferSize;
     const uint32_t pitch = gop->Mode->Information->PixelsPerScanLine;
-    const struct color_t white = {255,255,255};
     while (true) {};
     return 0;
 }
