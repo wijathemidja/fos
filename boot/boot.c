@@ -2,9 +2,9 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-struct color_t {
+typedef struct {
     unsigned char r,g,b;
-};
+} color_t;
 
 void print_pixel(volatile uint32_t* framebuffer, const uint64_t framebuffer_size, const uint64_t pitch, const uint16_t x, const uint16_t y, const struct color_t color) {
     uint64_t where = x + y*pitch;

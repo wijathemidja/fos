@@ -1,6 +1,0 @@
-[submodule "boot"]
-	path = boot
-	url = ./boot
-[submodule "fosk"]
-	path = fosk
-	url = ./fosk
