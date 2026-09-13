@@ -7,6 +7,12 @@ typedef struct {
     unsigned char r,g,b;
 } color_t;
 
+typedef struct {
+    volatile uint32_t* framebuffer;
+    const uint64_t framebuffer_size;
+    const uint64_t pitch;
+} framebuffer_t;
+// the below code was generated using AI
 uint8_t font[96][16] = {
     {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},  /* 0x20 ' ' */
     {0x00, 0x00, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x00, 0x18, 0x18, 0x00, 0x00, 0x00, 0x00},  /* 0x21 '!' */
@@ -33,7 +39,7 @@ uint8_t font[96][16] = {
     {0x00, 0x00, 0x7C, 0xC6, 0xC0, 0xC0, 0xFC, 0xC6, 0xC6, 0xC6, 0xC6, 0x7C, 0x00, 0x00, 0x00, 0x00},  /* 0x36 '6' */
     {0x00, 0x00, 0xFE, 0xC6, 0x06, 0x06, 0x0C, 0x18, 0x30, 0x30, 0x30, 0x30, 0x00, 0x00, 0x00, 0x00},  /* 0x37 '7' */
     {0x00, 0x00, 0x7C, 0xC6, 0xC6, 0xC6, 0x7C, 0xC6, 0xC6, 0xC6, 0xC6, 0x7C, 0x00, 0x00, 0x00, 0x00},  /* 0x38 '8' */
-    {0x00, 0x00, 0x7C, 0xC6, 0xC6, 0xC6, 0xC6, 0x7E, 0x06, 0x06, 0xC6, 0x7C, 0x00, 0x00, 0x00, 0x00},  /* 0x39 '9' */
+    {0x00, 0x00, 0x7C, 0xC6, 0xC6, 0xC6, 0xC6, 0x7E, 0x06, 0x06, 0xC6, 0x7C, 0x00, 0x00, 0x00, 0x00}, /* 0x39 '9' */
     {0x00, 0x00, 0x00, 0x00, 0x00, 0x18, 0x18, 0x00, 0x00, 0x00, 0x18, 0x18, 0x00, 0x00, 0x00, 0x00},  /* 0x3A ':' */
     {0x00, 0x00, 0x00, 0x00, 0x00, 0x18, 0x18, 0x00, 0x00, 0x00, 0x18, 0x18, 0x30, 0x00, 0x00, 0x00},  /* 0x3B ';' */
     {0x00, 0x00, 0x06, 0x0C, 0x18, 0x30, 0x60, 0x60, 0x30, 0x18, 0x0C, 0x06, 0x00, 0x00, 0x00, 0x00},  /* 0x3C '<' */
@@ -106,47 +112,49 @@ uint8_t font[96][16] = {
     {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},  /* 0x7F 'DEL' */
 };
 
-void print_pixel(volatile uint32_t* framebuffer, const uint64_t framebuffer_size, const uint64_t pitch, const uint16_t x, const uint16_t y, const color_t color) {
-    uint64_t where = x + y*pitch;
-    if (where*4 >= framebuffer_size) {
-        where = framebuffer_size - 1; // stop memory overflow out of framebuffer
+// the below code was NOT generated with AI
+
+void print_pixel(const framebuffer_t fb, const uint16_t x, const uint16_t y, const color_t color) {
+    uint64_t where = x + y*fb.pitch;
+    if (where*4 >= fb.framebuffer_size) {
+        where = fb.framebuffer_size - 1; // stop memory overflow out of framebuffer
     }
     uint32_t pixel_col = color.r << 16 | color.g << 8 | color.b;
-    framebuffer[where] = pixel_col;
+    fb.framebuffer[where] = pixel_col;
 }
-void print_rectangle(volatile uint32_t* const framebuffer, const uint64_t framebuffer_size, const uint64_t pitch, const uint16_t x1, const uint16_t x2, const uint16_t y1, const uint16_t y2, const color_t color) {
-    uint64_t where = x1 + y1*pitch;
-    if (where*4 >= framebuffer_size) {
-        where = framebuffer_size - 1;
+// print_rectangle doesnt recalculate where for each pixel so its much more efficient
+void print_rectangle(const framebuffer_t fb, const uint16_t x1, const uint16_t x2, const uint16_t y1, const uint16_t y2, const color_t color) {
+    uint64_t where = x1 + y1*fb.pitch;
+    if (where*4 >= fb.framebuffer_size) {
+        where = fb.framebuffer_size - 1;
     }
     uint32_t pixel_col = color.r << 16 | color.g << 8 | color.b;
     for (int i = 0; i <= y2 - y1; i++) {
         for (int j = 0; j <= x2-x1; j++) {
-            framebuffer[where+j] = pixel_col;
+            fb.framebuffer[where+j] = pixel_col;
         }
-        where += pitch;
+        where += fb.pitch;
     }
 }
 
-void print_char(volatile uint32_t* const framebuffer, const uint64_t framebuffer_size, const uint64_t pitch, const uint16_t x1, const uint16_t y1, const color_t color, const char character) {
-    uint64_t where = x1 + y1*pitch;
-    if (where*4 >= framebuffer_size) {
-        where = framebuffer_size - 1;
+// print_char basically prints an 8*16 rectangle and only fills in pixels if the corresponding coordinate in the font for said character has a pixel
+void print_char(const framebuffer_t fb, const uint16_t x1, const uint16_t y1, const color_t color, const unsigned char ascii_character) {
+    const unsigned char character = ascii_character - 32;
+    uint64_t where = x1 + y1*fb.pitch;
+    if (where*4 >= fb.framebuffer_size) {
+        where = fb.framebuffer_size - 1;
     }
     uint32_t pixel_col = color.r << 16 | color.g << 8 | color.b;
     for (int i = 0; i <= 16; i++) {
         uint8_t fontline = font[character][i];
         for (int j = 0; j <= 8; j++) {
             if ((fontline >> j) & 1){
-                framebuffer[where+(8-j)] = pixel_col;
+                fb.framebuffer[where+(8-j)] = pixel_col;
             }
         }
-        where += pitch;
+        where += fb.pitch;
     }
 }
-
-
-
 
 int main() {
     printf("fos.\n");
@@ -190,10 +198,9 @@ int main() {
     volatile uint32_t* const framebuffer = (volatile uint32_t*)(gop->Mode->FrameBufferBase);
     const uint64_t framebuffer_size = gop->Mode->FrameBufferSize;
     const uint32_t pitch = gop->Mode->Information->PixelsPerScanLine;
+    const framebuffer_t fb = {framebuffer, framebuffer_size, pitch};
     const color_t white = {.r = 255,.g = 255,.b = 255};
-    for (char i = 0; i <= 96; i++) {
-        print_char(framebuffer, framebuffer_size, pitch, 0+i*16,  0, white, i);
-    }
+    print_char(fb, 0, 0, white, 97);
     while (true) {};
     return 0;
 }
