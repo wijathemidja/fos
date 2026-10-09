@@ -1,6 +1,7 @@
 .DEFAULT_GOAL := all
 TARGET = BOOTX64.EFI
-CFLAGS += -I./uefi
+CC := clang
+CFLAGS += -I./uefi -std=c23
 include uefi/Makefile
 # the above line allows for the EFi to be made
 all: ${TARGET} intro cleanup move run
