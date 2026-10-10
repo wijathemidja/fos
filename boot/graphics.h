@@ -1,6 +1,6 @@
 #pragma once
-#include <stddef.h>
 #include <stdint.h>
+#include <uefi.h>
 // color "type (takes red green and blue values one byte each)
 typedef struct {
     unsigned char r,g,b;
