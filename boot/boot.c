@@ -1,5 +1,4 @@
 #include <uefi.h>
-#include <stdbool.h>
 #include <stdint.h>
 #include "graphics.h"
 
