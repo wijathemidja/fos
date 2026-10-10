@@ -18,7 +18,7 @@ uint8_t font[96][16];
 
 // the below code was NOT generated with AI
 unsigned int currentLine = 0;
-framebuffer_t* fbptr = NULL;
+framebuffer_t* fbptr = nullptr;
 const color_t white = {.r = 255,.g = 255,.b = 255};
 const color_t baby_blue = {.r = 153, .g = 204, .b = 255};
 const color_t black = {.r = 0, .g = 0, .b = 0};
