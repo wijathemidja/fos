@@ -32,8 +32,12 @@ Setting up GOP (with highest resolution available!)
 # Use of AI
 
 I highly dislike and discourage the use of AI in projects, especially 'vibecoding'. However it can sometimes be a useful tool.
-I used AI to debug (diagnosing issues) and then wrote fixes completely by myself (and with a bit of help from StackOverflow adn the OSDev Wiki).
+I used AI to debug (diagnosing issues) and then wrote fixes completely by myself (and with a bit of help from StackOverflow and the OSDev Wiki).
 The only use of AI code in this project is the font, which was copied from a bitmap file. I had manually copied each byte individually, but for 96 characters that is just too much work.
 
+TLDR;
+AI is *very* useful for certain things, and has absolutely helped with debugging. However
+
+NO AI CODE IS USED IN THIS PROJECT (except for the bitmap font!)
 
 
