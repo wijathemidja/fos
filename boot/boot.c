@@ -47,6 +47,7 @@ bool_error valid_kernel_elf(Elf64_Header *header) {
     if (header->e_ident[EI_CLASS] != 2) return (bool_error){.valid = false, .error = "Wrong EI_CLASS"};
     if (header->e_ident[EI_DATA] != 1) return (bool_error){.valid = false, .error = "Wrong EI_DATA"};
     if (header->e_ident[EI_VERSION] != 1) return (bool_error){.valid = false, .error = "Wrong EI_VERSION"};
+    if (header->e_ident[EI_OSABI] != 0x00) return (bool_error){.valid = false, .error = "Wrong OS ABI"};
     return (bool_error){.valid = true, .error = nullptr};
 }
 
@@ -153,7 +154,7 @@ int main() {
         println(white, check_elf.error);
         return 1;
     }
-    println(white, "Successfully read ELF header.");
+    println(white, "Successfully read ELF header & valid elf.");
     while (true) {};
     return 0;
 }
