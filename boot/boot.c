@@ -118,6 +118,12 @@ int main() {
     fread(chosen_font, font_size, 1, font_file);
     fclose(font_file);
     unsigned int currentLine = 0;
+    ssfn_load(&ctx, chosen_font);
+    ssfn_select(&ctx, SSFN_FAMILY_ANY, nullptr, SSFN_STYLE_REGULAR, SIZE);
+    ssfn_buffer.ptr = (unsigned char*)vfbptr->framebuffer;
+    ssfn_buffer.h = vfbptr->height;
+    ssfn_buffer.w = vfbptr->width;
+    ssfn_buffer.p = vfbptr->pitch*4;
     print("fos");
     print("fos framebuffer has been initialised!");
     print("Version 0.0.4");

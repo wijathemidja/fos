@@ -3,6 +3,8 @@
 #include <uefi.h>
 #define SSFN_IMPLEMENTATION
 #include <ssfn.h>
+
+#define SIZE 24
 // color "type (takes red green and blue values one byte each)
 typedef struct {
     unsigned char r,g,b;
@@ -60,29 +62,30 @@ inline void print_string(prstr_t ssfn, char* string){
     if (bytes_left > 0) print_string(ssfn, string + bytes_left);
 }
 
-inline unsigned int print_ln(color_t color, uint8_t opacity, uint8_t size, char* string, const void* font_data, const uint8_t currentLine) {
-    ssfn_t ctx = { 0 };
+ssfn_t ctx = { 0 };
+ssfn_buf_t ssfn_buffer = {
+    .ptr = nullptr,
+    .w = 0,
+    .h = 0,
+    .p = 0,
+    .x = 0,
+    .y = SIZE,
+    .fg = 0,
+};
+inline unsigned int print_ln(color_t color, uint8_t opacity, char* string, uint8_t currentLine) {
     uint32_t ssfn_color = opacity << 24 | color.r << 16 | color.g << 8 | color.b;
-    ssfn_buf_t ssfn_buffer = {
-        .ptr = (unsigned char*)vfbptr->framebuffer,
-        .w = vfbptr->width,
-        .h = vfbptr->height,
-        .p = vfbptr->pitch * 4,
-        .x = 0,
-        .y = size + currentLine,
-        .fg = ssfn_color,
-    };
-    ssfn_load(&ctx, font_data);
-    ssfn_select(&ctx, SSFN_FAMILY_ANY, nullptr, SSFN_STYLE_REGULAR, size);
+    ssfn_buffer.x = 0;
+    ssfn_buffer.y = SIZE * (currentLine+1);
+    ssfn_buffer.fg = ssfn_color;
     prstr_t ssfn = {.ctx = &ctx, .buf = &ssfn_buffer};
     print_string(ssfn, string);
     memcpy((void*)fbptr->framebuffer, (void*)vfbptr->framebuffer, fbptr->framebuffer_size);
-    return currentLine + size;
+    return ++currentLine;
 }
 
-#define print_shortcut(string, font_data, currentLine) (print_ln(white, 0xFF, 24, string, font_data, currentLine))
+#define print_shortcut(string, currentLine) (print_ln(white, 0xFF, string, currentLine))
 #define print(string) \
-    currentLine = print_shortcut(string, chosen_font, currentLine)
+    currentLine = print_shortcut(string, currentLine)
 
 inline uint8_t clear_screen() {
     const framebuffer_t fb = *fbptr;
