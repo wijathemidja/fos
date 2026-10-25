@@ -2,9 +2,15 @@
 #include <stdint.h>
 #include "graphics.h"
 
+// activate SSFN
 #define SSFN_IMPLEMENTATION
 #include "ssfn.h"
 
+// aspect ratio
+#define HORIZONTAL 16
+#define VERTICAL 9
+
+// ELF Header Type
 typedef struct {
     uint8_t e_ident[16];
     uint16_t e_type;
@@ -22,6 +28,7 @@ typedef struct {
     uint16_t e_shstrndx;
 } Elf64_Header;
 
+// Makes sure ELF is ELF
 enum Elf64_Ident {
     EI_MAG0,
     EI_MAG1,
@@ -35,11 +42,13 @@ enum Elf64_Ident {
     EI_PAD,
 };
 
+// kind of stupid - can get bool, and error from return
 typedef struct {
     bool valid;
     char* error;
 } bool_error;
 
+// Checks that file is actually ELF
 bool_error valid_kernel_elf(Elf64_Header *header) {
     if (!header) return (bool_error){.valid = false, .error = "Null file"};
     if (header->e_ident[EI_MAG0] != 0x7F) return (bool_error){.valid = false, .error = "Magic number wrong MAG0"};
@@ -58,6 +67,7 @@ int main() {
     printf("fos.\n");
     printf("Launched fos bootloader.\n");
     printf("Version 0.0.4\n");
+    // Looks for GOP
     efi_guid_t gopGuid = EFI_GRAPHICS_OUTPUT_PROTOCOL_GUID;
     efi_gop_t* gop;
     efi_status_t status = BS->LocateProtocol(&gopGuid, NULL, (void**)&gop);
@@ -65,6 +75,7 @@ int main() {
         printf("Can't find GOP\n");
         return 1;
     }
+    // area is just the mode number
     int area = 0;
     printf("Found GOP\n");
     efi_gop_mode_info_t *info;
@@ -77,7 +88,8 @@ int main() {
         } else {
             printf("Successfully got mode %d info \n",i);
             printf("%dx%d \n \n",info->HorizontalResolution,info->VerticalResolution);
-            if (info->HorizontalResolution * 9 == info->VerticalResolution * 16) {
+            if (info->HorizontalResolution * VERTICAL == info->VerticalResolution * HORIZONTAL) {
+                // if right aspect ratio and higher res then change area
                 if (i > area) {
                     printf("Replaced resolution with %dx%d\n",info->HorizontalResolution,info->VerticalResolution);
                     area = i;
@@ -86,15 +98,19 @@ int main() {
             }
         }
     }
+    // make best compat res the res
     const int selectMode = area;
     printf("Selected target mode found\n");
+    // select res
     status = gop->SetMode(gop, selectMode);
     if (EFI_ERROR(status)) {
         printf("Can't set mode\n");
         return 1;
     }
+    // get fb info to draw to fb
     volatile uint32_t* const framebuffer = (volatile uint32_t*)(gop->Mode->FrameBufferBase);
     const uint64_t framebuffer_size = gop->Mode->FrameBufferSize;
+    // pitch is in pixels not bytes
     const int pitch = (int)gop->Mode->Information->PixelsPerScanLine;
     const int width = (int)gop->Mode->Information->HorizontalResolution;
     const int height = (int)gop->Mode->Information->VerticalResolution;
@@ -105,6 +121,7 @@ int main() {
     memset((void*)virtualframebuffer, 0, framebuffer_size);
     framebuffer_t virtualframebuffer_Instance = {.framebuffer = virtualframebuffer, .framebuffer_size = framebuffer_size, .pitch = pitch, .width = width, .height = height};
     vfbptr = &virtualframebuffer_Instance;
+    // open font file
     FILE *font_file = fopen("jetbrains_reg.sfn", "r");
     if (font_file == NULL) {
         printf("Can't open font file\n");
@@ -117,9 +134,12 @@ int main() {
     unsigned char* chosen_font = malloc(font_size);
     fread(chosen_font, font_size, 1, font_file);
     fclose(font_file);
+    // font file is now in RAM
     unsigned int currentLine = 0;
+    // load font into context
     ssfn_load(&ctx, chosen_font);
     ssfn_select(&ctx, SSFN_FAMILY_ANY, nullptr, SSFN_STYLE_REGULAR, SIZE);
+    // init actual starting vals for ssfn buffer
     ssfn_buffer.ptr = (unsigned char*)vfbptr->framebuffer;
     ssfn_buffer.h = vfbptr->height;
     ssfn_buffer.w = vfbptr->width;
